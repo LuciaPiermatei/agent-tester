@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tester de Agentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e0f;
+  --bg2: #161618;
+  --bg3: #1e1e21;
+  --bg4: #252528;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0f0f0;
+  --text2: #888;
+  --text3: #555;
+  --accent: #c8f135;
+  --accent-dim: rgba(200,241,53,0.12);
+  --accent-dim2: rgba(200,241,53,0.06);
+  --blue: #4fa8ff;
+  --blue-dim: rgba(79,168,255,0.12);
+  --orange: #ff9e4f;
+  --orange-dim: rgba(255,158,79,0.12);
+  --red: #ff5f5f;
+  --red-dim: rgba(255,95,95,0.12);
+  --green: #5fcc7f;
+  --green-dim: rgba(95,204,127,0.12);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+/* LAYOUT */
+.layout { display: grid; grid-template-columns: 220px 1fr; grid-template-rows: 56px 1fr; min-height: 100vh; }
+.topbar { grid-column: 1/-1; display: flex; align-items: center; padding: 0 1.5rem; border-bottom: 1px solid var(--border); background: var(--bg); gap: 1rem; }
+.logo { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.project-name { font-size: 13px; color: var(--text2); border-left: 1px solid var(--border2); padding-left: 1rem; }
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.sidebar { background: var(--bg2); border-right: 1px solid var(--border); padding: 1.25rem 0; display: flex; flex-direction: column; gap: 2px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 1.25rem; font-size: 13px; color: var(--text2); cursor: pointer; border-radius: 0; transition: background 0.15s, color 0.15s; border-left: 2px solid transparent; }
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--accent-dim2); color: var(--accent); border-left-color: var(--accent); }
+.nav-icon { width: 16px; text-align: center; font-size: 14px; }
+.nav-section { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); padding: 1rem 1.25rem 0.5rem; font-weight: 500; }
+.main { overflow-y: auto; padding: 2rem; }
+.panel { display: none; } .panel.active { display: block; }
+.page-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.page-sub { font-size: 13px; color: var(--text2); margin-bottom: 1.75rem; }
+
+/* COMPONENTS */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.card + .card { margin-top: 1rem; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+.field:last-child { margin-bottom: 0; }
+.field label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text2); font-weight: 500; }
+.field input, .field textarea, .field select {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-family: var(--sans); font-size: 13px; padding: 9px 12px;
+  transition: border-color 0.15s; width: 100%; outline: none;
+}
+.field textarea { font-family: var(--mono); font-size: 12px; line-height: 1.6; resize: vertical; min-height: 80px; }
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--border2); }
+.hint { font-size: 11px; color: var(--text3); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid2 .full { grid-column: 1/-1; }
+
+/* BUTTONS */
+btn, .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-family: var(--sans); font-size: 12px; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.btn:hover { background: var(--bg4); border-color: var(--border2); }
+.btn-accent { background: var(--accent); color: #0e0e0f; border-color: var(--accent); font-weight: 600; }
+.btn-accent:hover { background: #d4f54a; border-color: #d4f54a; }
+.btn-ghost { background: none; border-color: transparent; color: var(--text2); }
+.btn-ghost:hover { background: var(--bg3); color: var(--text); border-color: var(--border); }
+.btn-danger { border-color: var(--red-dim); color: var(--red); }
+.btn-danger:hover { background: var(--red-dim); }
+.btn-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.badge-saved { font-size: 11px; padding: 3px 10px; background: var(--green-dim); color: var(--green); border-radius: 20px; display: none; font-family: var(--mono); }
+
+/* CHAT */
+.chat-layout { display: flex; flex-direction: column; height: calc(100vh - 56px - 4rem); min-height: 500px; }
+.chat-msgs { flex: 1; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius) var(--radius) 0 0; }
+.msg { max-width: 76%; padding: 10px 14px; font-size: 13px; line-height: 1.6; }
+.msg.user { align-self: flex-end; background: var(--accent-dim); color: var(--accent); border-radius: 14px 14px 4px 14px; border: 1px solid rgba(200,241,53,0.2); }
+.msg.agent { align-self: flex-start; background: var(--bg2); border: 1px solid var(--border); color: var(--text); border-radius: 14px 14px 14px 4px; font-family: var(--mono); font-size: 12px; }
+.msg.sys { align-self: center; font-size: 11px; color: var(--text3); background: none; padding: 2px 0; font-family: var(--mono); }
+.msg.tool-tag { align-self: flex-start; background: var(--orange-dim); color: var(--orange); font-size: 11px; border-radius: var(--radius-sm); padding: 5px 10px; border: 1px solid rgba(255,158,79,0.2); font-family: var(--mono); }
+.typing { display: flex; gap: 5px; padding: 12px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 14px 14px 14px 4px; align-self: flex-start; }
+.typing span { width: 5px; height: 5px; background: var(--text3); border-radius: 50%; animation: bop 1.2s infinite; }
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bop{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+.chat-bottom { background: var(--bg2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input { flex: 1; }
+.quick-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+.pill { font-size: 11px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; background: none; cursor: pointer; color: var(--text2); font-family: var(--sans); transition: all 0.15s; }
+.pill:hover { border-color: var(--accent); color: var(--accent); }
+
+/* CASES */
+.cases-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 1.25rem; }
+.stat-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+.stat-val { font-size: 22px; font-weight: 700; }
+.stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; letter-spacing: 0.05em; text-transform: uppercase; }
+.case-item { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 6px; }
+.case-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; background: var(--bg2); transition: background 0.15s; }
+.case-head:hover { background: var(--bg3); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+.dot.pass { background: var(--green); }
+.dot.fail { background: var(--red); }
+.dot.running { background: var(--blue); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.case-title { flex: 1; font-size: 13px; color: var(--text); }
+.tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--bg4); color: var(--text2); letter-spacing: 0.04em; border: 1px solid var(--border); }
+.case-body { border-top: 1px solid var(--border); padding: 12px 14px; background: var(--bg); display: none; }
+.case-body.open { display: block; }
+.case-body .field { margin-bottom: 10px; }
+.result-box { font-size: 11px; font-family: var(--mono); background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; max-height: 100px; overflow-y: auto; color: var(--text2); margin-top: 8px; line-height: 1.6; display: none; white-space: pre-wrap; }
+
+/* LOG */
+.log-box { font-size: 12px; font-family: var(--mono); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; min-height: 200px; max-height: calc(100vh - 220px); overflow-y: auto; line-height: 1.8; }
+.log-row { display: flex; gap: 10px; }
+.lt { color: var(--text3); flex-shrink: 0; }
+.l-info { color: var(--blue); }
+.l-ok { color: var(--green); }
+.l-err { color: var(--red); }
+.l-tool { color: var(--orange); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+
+@media(max-width:640px){
+  .layout{grid-template-columns:1fr;grid-template-rows:56px auto 1fr}
+  .sidebar{flex-direction:row;overflow-x:auto;padding:0;border-right:none;border-bottom:1px solid var(--border)}
+  .nav-section{display:none}
+  .nav-item{padding:12px 16px;border-left:none;border-bottom:2px solid transparent;white-space:nowrap}
+  .nav-item.active{border-bottom-color:var(--accent);border-left:none}
+  .grid2{grid-template-columns:1fr}
+  .cases-stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <span class="logo">Tester de Agentes</span>
+  <span class="project-name" id="topbar-project">Sin proyecto</span>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" onclick="loadExample()">⚡ Cargar ejemplo inmobiliaria</button>
+    <button class="btn btn-danger" onclick="resetAll()">↺ Reiniciar</button>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <span class="nav-section">Herramientas</span>
+  <div class="nav-item active" onclick="sw('config')" id="nav-config">
+    <span class="nav-icon">⚙</span> Configuración
+  </div>
+  <div class="nav-item" onclick="sw('chat')" id="nav-chat">
+    <span class="nav-icon">💬</span> Chat libre
+  </div>
+  <div class="nav-item" onclick="sw('cases')" id="nav-cases">
+    <span class="nav-icon">✓</span> Casos de prueba
+  </div>
+  <div class="nav-item" onclick="sw('log')" id="nav-log">
+    <span class="nav-icon">◎</span> Log
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- CONFIG -->
+  <div id="panel-config" class="panel active">
+    <p class="page-title">Configuración del agente</p>
+    <p class="page-sub">Definí el comportamiento del agente que vas a testear.</p>
+    <div class="card">
+      <div class="grid2">
+        <div class="field">
+          <label>Nombre del proyecto</label>
+          <input type="text" id="cfg-name" placeholder="Ej: Agente Inmobiliaria" oninput="document.getElementById('topbar-project').textContent=this.value||'Sin proyecto'" />
+        </div>
+        <div class="field">
+          <label>Nombre del agente</label>
+          <input type="text" id="cfg-agent" placeholder="Ej: Asistente Demo Inmobiliaria" />
+        </div>
+        <div class="field full">
+          <label>System prompt</label>
+          <textarea id="cfg-system" style="min-height:180px" placeholder="Pegá acá el system prompt completo del agente..."></textarea>
+          <span class="hint">Define el rol, tono, flujo y restricciones del agente.</span>
+        </div>
+        <div class="field full">
+          <label>Contexto adicional (catálogo, FAQ, datos del negocio)</label>
+          <textarea id="cfg-context" style="min-height:110px" placeholder="Propiedades disponibles, precios, preguntas frecuentes..."></textarea>
+          <span class="hint">Se agrega al final del system prompt en cada llamada a la API.</span>
+        </div>
+        <div class="field full">
+          <label>Frases rápidas para el chat (una por línea)</label>
+          <textarea id="cfg-quick" style="min-height:70px" placeholder="Hola, sigo buscando&#10;Ya lo resolví, gracias&#10;No me manden más mensajes&#10;Quiero hablar con una persona"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:1rem">
+      <button class="btn btn-accent" onclick="saveConfig()">Guardar configuración</button>
+      <span class="badge-saved" id="badge-saved">✓ Guardado</span>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="panel-chat" class="panel">
+    <p class="page-title">Chat libre</p>
+    <p class="page-sub">Hablá como si fueras el cliente. El agente responde con el prompt configurado.</p>
+    <div class="chat-layout">
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg sys">Configurá el agente y empezá a chatear →</div>
+      </div>
+      <div class="chat-bottom">
+        <div class="chat-input-row">
+          <input type="text" id="chat-in" placeholder="Escribí como si fueras el cliente..." onkeydown="if(event.key==='Enter')sendChat()" />
+          <button class="btn btn-accent" onclick="sendChat()">Enviar →</button>
+          <button class="btn btn-ghost" onclick="clearChat()" title="Limpiar chat">✕</button>
+        </div>
+        <div class="quick-pills" id="quick-pills"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CASES -->
+  <div id="panel-cases" class="panel">
+    <p class="page-title">Casos de prueba</p>
+    <p class="page-sub">Definí conversaciones y verificaciones automáticas. El agente tiene que incluir las palabras clave en su respuesta.</p>
+    <div class="cases-stats">
+      <div class="stat-box"><div class="stat-val" id="st-tot">0</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-box"><div class="stat-val" id="st-ok" style="color:var(--green)">0</div><div class="stat-lbl">Pasaron</div></div>
+      <div class="stat-box"><div class="stat-val" id="st-fail" style="color:var(--red)">0</div><div class="stat-lbl">Fallaron</div></div>
+      <div class="stat-box"><div class="stat-val" id="st-pend" style="color:var(--orange)">0</div><div class="stat-lbl">Pendientes</div></div>
+    </div>
+    <div class="btn-row" style="margin-bottom:1rem">
+      <button class="btn btn-accent" onclick="runAll()">▶ Correr todos</button>
+      <button class="btn" onclick="addCase()">+ Agregar caso</button>
+      <button class="btn btn-ghost" onclick="resetCases()">✕ Limpiar resultados</button>
+    </div>
+    <div id="case-list"></div>
+  </div>
+
+  <!-- LOG -->
+  <div id="panel-log" class="panel">
+    <p class="page-title">Log de actividad</p>
+    <p class="page-sub">Registro de mensajes, herramientas detectadas y resultados de casos.</p>
+    <div class="btn-row" style="margin-bottom:1rem">
+      <button class="btn btn-ghost" onclick="clearLog()">✕ Limpiar log</button>
+    </div>
+    <div class="log-box" id="log-box"><span style="color:var(--text3)">Sin actividad todavía.</span></div>
+  </div>
+
+</main>
+</div>
+
+<script>
+let chatHistory = [], logEntries = [], cases = [];
+let config = { name:'', agent:'', system:'', context:'', quick:[] };
+
+const EXAMPLE = {
+  name:'Agente Inmobiliaria', agent:'Asistente de Demo Inmobiliaria',
+  system:`Sos un asesor comercial virtual de Demo Inmobiliaria.
+Atendés consultas de compradores, vendedores, inversores e inquilinos por WhatsApp.
+
+ESTILO: mensajes cortos máximo 4 líneas. Tono cercano y profesional. Sin asteriscos ni markdown.
+Emojis moderados. Nunca dos preguntas en el mismo mensaje.
+
+FLUJO:
+1. Saludar y detectar intención (comprar/vender/alquilar/invertir).
+2. Obtener zona, tipo de propiedad, ambientes y presupuesto.
+3. Buscar propiedades compatibles del catálogo.
+4. Presentar opciones de a una.
+5. Si hay interés concreto, derivar al asesor al 11-2507-9260.
+
+HERRAMIENTAS DISPONIBLES (cuando uses una escribí en tu respuesta [HERRAMIENTA: Nombre]):
+- Herramienta_Buscar_Propiedades: cuando tengas zona u operación del cliente
+- Herramienta_Guardar_Lead: cuando el cliente confirme interés y dé su nombre
+- Herramienta_Cerrar_Lead: si el cliente ya resolvió su situación
+- Herramienta_Baja: si el cliente no quiere más contacto
+
+RESTRICCIONES: Solo temas inmobiliarios. No confirmar precios sin asesor.`,
+  context:`CATÁLOGO DISPONIBLE:
+- Depto venta | Palermo | 3 amb | USD 130.000 | Luminoso piso alto con balcón | https://ejemplo.com/001
+- Depto venta | Palermo | 2 amb | USD 95.000 | Semi piso reciclado, cochera | https://ejemplo.com/002
+- Depto alquiler | Belgrano | 2 amb | ARS 350.000 | Reciclado a nuevo, cerca subte | https://ejemplo.com/003
+- Depto alquiler | Belgrano | 3 amb | ARS 520.000 | Amplio, cochera incluida | https://ejemplo.com/004
+- Casa venta | Caballito | 5 amb | USD 210.000 | Con jardín y quincho | https://ejemplo.com/005
+- Depto venta | Núñez | 3 amb | USD 148.000 | Vista al río, cochera | https://ejemplo.com/006`,
+  quick:['Hola, sigo buscando en Palermo','2 ambientes hasta USD 100.000','Ya compré, gracias','No me manden más mensajes','Quiero hablar con una persona','¿Tienen algo en Belgrano de 3 ambientes?']
+};
+
+const EXAMPLE_CASES = [
+  {id:1,name:'Cliente retoma búsqueda',tag:'flujo base',msgs:'Hola, sigo buscando en Palermo\n2 ambientes, hasta USD 100.000',checks:'palermo\nambiente',result:null,open:false,resultText:''},
+  {id:2,name:'Cliente ya resolvió',tag:'herramienta',msgs:'Ya compré una propiedad\nSí, firmé la semana pasada',checks:'Herramienta_Cerrar_Lead',result:null,open:false,resultText:''},
+  {id:3,name:'Pide darse de baja',tag:'herramienta',msgs:'No me manden más mensajes\nSáquenme de la lista',checks:'Herramienta_Baja',result:null,open:false,resultText:''},
+  {id:4,name:'Pide hablar con asesor',tag:'derivación',msgs:'Quiero hablar con una persona\n¿Me pueden llamar?',checks:'11-2507-9260',result:null,open:false,resultText:''},
+  {id:5,name:'Mensaje fuera de tema',tag:'caso límite',msgs:'¿Cómo está el dólar hoy?',checks:'inmobilia',result:null,open:false,resultText:''},
+];
+
+function sw(t) {
+  ['config','chat','cases','log'].forEach(p=>{
+    document.getElementById('panel-'+p).classList.toggle('active',p===t);
+    document.getElementById('nav-'+p).classList.toggle('active',p===t);
+  });
+  if(t==='chat') renderQuick();
+  if(t==='cases') renderCases();
+}
+
+function log(type, msg) {
+  const time = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  logEntries.unshift({time,type,msg});
+  if(logEntries.length>200) logEntries.pop();
+  const cls = type==='ok'?'l-ok':type==='error'?'l-err':type==='tool'?'l-tool':'l-info';
+  const icon = type==='ok'?'✓':type==='error'?'✗':type==='tool'?'⚙':'→';
+  document.getElementById('log-box').innerHTML = logEntries.map(e=>`<div class="log-row"><span class="lt">${e.time}</span><span class="${e.type==='ok'?'l-ok':e.type==='error'?'l-err':e.type==='tool'?'l-tool':'l-info'}">${e.type==='ok'?'✓':e.type==='error'?'✗':e.type==='tool'?'⚙':'→'} ${e.msg}</span></div>`).join('');
+}
+
+function clearLog() { logEntries=[]; document.getElementById('log-box').innerHTML='<span style="color:var(--text3)">Log limpio.</span>'; }
+
+function saveConfig() {
+  config.name = document.getElementById('cfg-name').value.trim();
+  config.agent = document.getElementById('cfg-agent').value.trim();
+  config.system = document.getElementById('cfg-system').value.trim();
+  config.context = document.getElementById('cfg-context').value.trim();
+  config.quick = document.getElementById('cfg-quick').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  document.getElementById('topbar-project').textContent = config.name||'Sin proyecto';
+  const b = document.getElementById('badge-saved');
+  b.style.display='inline'; setTimeout(()=>b.style.display='none',2000);
+  log('ok','Configuración guardada: '+config.name);
+  renderQuick();
+}
+
+function loadExample() {
+  document.getElementById('cfg-name').value=EXAMPLE.name;
+  document.getElementById('cfg-agent').value=EXAMPLE.agent;
+  document.getElementById('cfg-system').value=EXAMPLE.system;
+  document.getElementById('cfg-context').value=EXAMPLE.context;
+  document.getElementById('cfg-quick').value=EXAMPLE.quick.join('\n');
+  document.getElementById('topbar-project').textContent=EXAMPLE.name;
+  cases=EXAMPLE_CASES.map(c=>({...c}));
+  saveConfig();
+  log('info','Ejemplo inmobiliaria cargado');
+}
+
+function resetAll() {
+  if(!confirm('¿Reiniciar todo?')) return;
+  chatHistory=[];logEntries=[];cases=[];
+  config={name:'',agent:'',system:'',context:'',quick:[]};
+  ['cfg-name','cfg-agent','cfg-system','cfg-context','cfg-quick'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('topbar-project').textContent='Sin proyecto';
+  document.getElementById('chat-msgs').innerHTML='<div class="msg sys">Configurá el agente y empezá a chatear →</div>';
+  clearLog(); sw('config');
+}
+
+function renderQuick() {
+  const el=document.getElementById('quick-pills');
+  if(!config.quick.length){el.innerHTML='<span style="font-size:11px;color:var(--text3)">Agregá frases rápidas en Configuración</span>';return;}
+  el.innerHTML=config.quick.map(q=>`<button class="pill" onclick="setIn(${JSON.stringify(q)})">${q.length>30?q.slice(0,28)+'…':q}</button>`).join('');
+}
+
+function setIn(t){document.getElementById('chat-in').value=t;document.getElementById('chat-in').focus();}
+
+function addChatMsg(role,text){
+  const el=document.getElementById('chat-msgs');
+  const d=document.createElement('div');
+  d.className='msg '+role; d.textContent=text;
+  el.appendChild(d); el.scrollTop=el.scrollHeight; return d;
+}
+
+function showTyping(){
+  const el=document.getElementById('chat-msgs');
+  const d=document.createElement('div');
+  d.className='typing';d.id='typing';
+  d.innerHTML='<span></span><span></span><span></span>';
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+
+function clearChat(){chatHistory=[];document.getElementById('chat-msgs').innerHTML='<div class="msg sys">Chat reiniciado</div>';log('info','Chat limpiado');}
+
+function getSys(){return (config.system||'Sos un asistente útil.')+(config.context?'\n\n'+config.context:'');}
+
+function detectTools(text){
+  const m=text.match(/\[HERRAMIENTA:\s*([^\]]+)\]/gi)||[];
+  m.forEach(x=>{
+    const n=x.replace(/\[HERRAMIENTA:\s*/i,'').replace(']','').trim();
+    log('tool',n+' — detectada en conversación');
+    const el=document.getElementById('chat-msgs');
+    const d=document.createElement('div');
+    d.className='msg tool-tag';d.textContent='⚙ '+n;
+    el.appendChild(d);el.scrollTop=el.scrollHeight;
+  });
+}
+
+async function callAPI(messages, system){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system,messages})
+  });
+  const d=await r.json();
+  return d.content?.map(b=>b.text||'').join('')||'Sin respuesta';
+}
+
+async function sendChat(){
+  const inp=document.getElementById('chat-in');
+  const txt=inp.value.trim(); if(!txt)return;
+  if(!config.system){addChatMsg('sys','⚠ Configurá el agente primero');return;}
+  inp.value='';inp.disabled=true;
+  document.querySelector('.chat-input-row .btn-accent').disabled=true;
+  addChatMsg('user',txt);showTyping();
+  log('info','Usuario: '+txt.slice(0,60)+(txt.length>60?'…':''));
+  try{
+    const msgs=[...chatHistory,{role:'user',content:txt}];
+    const reply=await callAPI(msgs,getSys());
+    document.getElementById('typing')?.remove();
+    chatHistory.push({role:'user',content:txt});
+    chatHistory.push({role:'assistant',content:reply});
+    const d=addChatMsg('agent','');
+    let i=0; const iv=setInterval(()=>{d.textContent=reply.slice(0,i+=4);if(i>=reply.length){d.textContent=reply;clearInterval(iv);detectTools(reply);}},12);
+    log('ok','Respuesta recibida ('+reply.length+' chars)');
+  }catch(e){
+    document.getElementById('typing')?.remove();
+    addChatMsg('agent','Error de conexión con la API.');
+    log('error',e.message);
+  }
+  inp.disabled=false;
+  document.querySelector('.chat-input-row .btn-accent').disabled=false;
+  inp.focus();
+}
+
+function renderCases(){
+  const el=document.getElementById('case-list');
+  if(!cases.length){el.innerHTML='<p style="font-size:13px;color:var(--text2);padding:1rem 0">Sin casos. Cargá el ejemplo o agregá uno.</p>';updateStats();return;}
+  el.innerHTML=cases.map(c=>`
+    <div class="case-item">
+      <div class="case-head" onclick="toggleCase(${c.id})">
+        <div class="dot ${c.result||''}" id="dot-${c.id}"></div>
+        <span class="case-title">${c.name}</span>
+        <span class="tag">${c.tag}</span>
+        <button class="btn" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();runCase(${c.id})">▶</button>
+        <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();deleteCase(${c.id})">✕</button>
+      </div>
+      <div class="case-body ${c.open?'open':''}" id="cb-${c.id}">
+        <div class="field"><label>Nombre</label><input value="${c.name}" onchange="updateCase(${c.id},'name',this.value)" /></div>
+        <div class="grid2">
+          <div class="field"><label>Tag</label><input value="${c.tag}" onchange="updateCase(${c.id},'tag',this.value)" /></div>
+        </div>
+        <div class="field"><label>Mensajes del usuario (uno por línea)</label><textarea onchange="updateCase(${c.id},'msgs',this.value)">${c.msgs}</textarea></div>
+        <div class="field"><label>Palabras clave a verificar (una por línea)</label><textarea style="min-height:44px" onchange="updateCase(${c.id},'checks',this.value)">${c.checks}</textarea></div>
+        <div class="result-box" id="rb-${c.id}" style="${c.resultText?'display:block':''}">${c.resultText||''}</div>
+      </div>
+    </div>`).join('');
+  updateStats();
+}
+
+function toggleCase(id){const c=cases.find(x=>x.id===id);c.open=!c.open;document.getElementById('cb-'+id).classList.toggle('open',c.open);}
+function updateCase(id,f,v){const c=cases.find(x=>x.id===id);if(c)c[f]=v;}
+function deleteCase(id){cases=cases.filter(x=>x.id!==id);renderCases();}
+function resetCases(){cases.forEach(c=>{c.result=null;c.resultText='';});renderCases();}
+
+function addCase(){
+  const id=Date.now();
+  cases.push({id,name:'Nuevo caso',tag:'sin tag',msgs:'',checks:'',result:null,open:true,resultText:''});
+  renderCases();
+  setTimeout(()=>{const el=document.getElementById('cb-'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
+}
+
+function updateStats(){
+  const pass=cases.filter(c=>c.result==='pass').length;
+  const fail=cases.filter(c=>c.result==='fail').length;
+  const pend=cases.filter(c=>!c.result||c.result==='running').length;
+  document.getElementById('st-tot').textContent=cases.length;
+  document.getElementById('st-ok').textContent=pass;
+  document.getElementById('st-fail').textContent=fail;
+  document.getElementById('st-pend').textContent=pend;
+}
+
+async function runCase(id){
+  const c=cases.find(x=>x.id===id); if(!c)return;
+  if(!config.system){log('error','Configurá el agente primero');sw('config');return;}
+  c.result='running';
+  document.getElementById('dot-'+id).className='dot running';
+  const msgs=c.msgs.split('\n').map(s=>s.trim()).filter(Boolean);
+  const checks=c.checks.split('\n').map(s=>s.trim().toLowerCase()).filter(Boolean);
+  let local=[],allReplies='',lines=[];
+  try{
+    for(const msg of msgs){
+      const r=await callAPI([...local,{role:'user',content:msg}],getSys());
+      local.push({role:'user',content:msg});
+      local.push({role:'assistant',content:r});
+      allReplies+=r.toLowerCase()+' ';
+      lines.push('U: '+msg.slice(0,60));
+      lines.push('A: '+r.slice(0,140)+(r.length>140?'…':''));
+      const tools=r.match(/\[HERRAMIENTA:\s*([^\]]+)\]/gi)||[];
+      tools.forEach(m=>{const n=m.replace(/\[HERRAMIENTA:\s*/i,'').replace(']','').trim();log('tool',n+' — caso: '+c.name);});
+      await new Promise(r=>setTimeout(r,300));
+    }
+    const missing=checks.filter(ch=>!allReplies.includes(ch));
+    const passed=missing.length===0;
+    c.result=passed?'pass':'fail';
+    c.resultText=lines.join('\n')+(passed?'\n\n✓ Todas las verificaciones pasaron':'\n\n✗ No encontrado: '+missing.join(', '));
+    document.getElementById('dot-'+id).className='dot '+(passed?'pass':'fail');
+    const rb=document.getElementById('rb-'+id);
+    if(rb){rb.textContent=c.resultText;rb.style.display='block';}
+    log(passed?'ok':'error',c.name+': '+(passed?'OK':'falló — '+missing.join(', ')));
+  }catch(e){
+    c.result='fail';c.resultText='Error: '+e.message;
+    document.getElementById('dot-'+id).className='dot fail';
+    log('error',c.name+': error de API');
+  }
+  updateStats();
+}
+
+async function runAll(){
+  if(!config.system){log('error','Configurá el agente primero');sw('config');return;}
+  cases.forEach(c=>{c.result=null;c.resultText='';});
+  renderCases();
+  for(const c of cases){await runCase(c.id);await new Promise(r=>setTimeout(r,400));}
+}
+
+renderQuick();renderCases();
+</script>
+</body>
+</html>
